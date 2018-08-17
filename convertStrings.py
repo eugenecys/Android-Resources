@@ -2,6 +2,8 @@ import os
 import sys
 import json
 import lxml.etree as ET
+import sys  
+
 
 from csv import reader
 
@@ -11,9 +13,9 @@ class Translation:
         self.id = sId
         self.pluralIds = []
         self.strings = {}
-        self.id = ""
 
     def addString(self, locale, translationString, pluralId = None):
+        #print('Adding strings to ' + self.id + ' for ' + str(locale) + ' with string ' + translationString)
         if self.isPlural and pluralId is None:
             print('Tried to add string "' + pluralId + ': ' + translationString + '" to ' + self.id + ', ignoring.')
             return
@@ -26,7 +28,7 @@ class Translation:
             self.strings[locale] = translationString
 
     def addStrings(self, locales, strs, pluralId = None):
-        print('Adding strings to ' + self.id + ' for ' + str(locales) + ' with strings ' + str(strs))
+        #print('Adding strings to ' + self.id + ' for ' + str(locales) + ' with strings ' + str(strs))
         if self.isPlural and pluralId is None:
             print('Tried to add strings "' + pluralId + '" to ' + self.id + ', ignoring.')
             return
@@ -47,6 +49,8 @@ class Translation:
             return self.strings[locale] 
 
 def main():
+    reload(sys)  
+    sys.setdefaultencoding('utf8')
     args = sys.argv[1:]
     if not args or len(args) == 0:
         print("No arguments given!")
@@ -199,9 +203,11 @@ def writeToFile(path, locale, stringIds, translations):
     # We start appending the xmls below the last item in the xml
     lastItemLine += 1
 
-
+    print('------------------------------------------------------------------------------------------')
+    print('The following strings will be replaced for ' + path + ': ')
+    print('------------------------------------------------------------------------------------------')
     for sId in stringIds:
-        print(locale + ': ' + sId)
+        #print(locale + ': ' + sId)
         translation = translations[sId]
         if sId in ids:
             node = ids[sId]
@@ -217,9 +223,15 @@ def writeToFile(path, locale, stringIds, translations):
 
 
         if node.tag == 'string':
-            if node.text:
-                print('String id "' + sId + '":' + node.text + ' already exists in ' + path + ', replacing it with ' + translation.getString(locale))
-            node.text = translation.getString(locale).decode("utf-8")
+            storedString = translation.getString(locale)
+            if not storedString:
+                print('String provided for ' + sId + ' is empty, ignoring')  
+                if not node.text:
+                    root.remove(node)
+            elif node.text != storedString:
+                if node.text:
+                    print('"' + node.text + '" -> "' + storedString + '" (' + sId + ')')
+                node.text = storedString.decode("utf-8")
         else:
             pluralElements = node.findall('./item')
             plurals = {}
@@ -235,14 +247,18 @@ def writeToFile(path, locale, stringIds, translations):
                     pluralItem.tail = '\n        '
                     node.append(pluralItem)
                 
-                if pluralItem.text:
-                    print('String id "' + sId + '$' + pluralId + '":' + pluralItem.text + ' already exists in ' + path + ', replacing it with ' + translation.getString(locale, pluralId))                    
+                storedString = translation.getString(locale, pluralId)
 
-                pluralItem.text = translation.getString(locale, pluralId).decode("utf-8")
+                if not storedString:
+                    print('String provided for ' + sId + ':' + pluralId + ' is empty, ignoring') 
+                elif pluralItem.text != storedString:
+                    if pluralItem.text:
+                        print('"' + pluralItem.text + '" -> "' + storedString + '" (' + sId + ':' + pluralId + ')')
+                    pluralItem.text = translation.getString(locale, pluralId).decode("utf-8")
 
     for item in root:
         if 'name' in item.attrib:
-            if not item.tail == '\n':
+            if item.tail == '\n':
                 item.tail = '\n    '
 
 
