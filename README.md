@@ -7,12 +7,27 @@ I created a Python script to assist in populating the appropriate resource folde
 ### How to use ###
 
 #### Creating the CSV file ####
-You'll need to store the translated strings in a csv file, where the first row indicates the language/language locale of the resource, and the first column is the resource name. An example would be:
+You'll need to store the translated strings in a csv file, where the first row indicates the language/language locale of the resource, and the first column is the resource name. 
 
-|   ID   | English | German  | Japanese | Italian |
-|--------|---------|---------|----------|---------|
-|string_a|  Hello  |  Hallo  | こんにちは |  Ciao   |
-|string_b|  World  |  Welt   |    世界   |  Mondo  |
+The format of the first column is important to determine what type of resource we're adding. 
+If it's a String, we prefix "string#", so the ID would be: 
+```
+string#my_resource_string
+```
+If it's a Plural with items "one" and "other", we prefix "plural#" and add the item suffix denoted by a "$":
+```
+plural#my_resource_string$one
+plural#my_resource_string$other
+```
+
+An example would be:
+
+|         ID         |  English  |  German  | Japanese | Italian |
+|--------------------|-----------|----------|----------|---------|
+|    string#hello    |   Hello   |   Hallo  | こんにちは |  Ciao   |
+|    string#world    |   World   |   Welt   |    世界   |  Mondo  |
+| plural#dollar$one  | 1 Dollar  | 1 Dollar |   1ドル   | Dollaro |
+| plural#dollar$other| %d Dollars|%d Dollars|   %dドル  | Dollari |
 
 Note that I did a non-exhaustive simple string matching for the language locale, so the easiest way is to either label the column with the name of the language and the locale, or just the raw locale string (e.g. en_US)
 
